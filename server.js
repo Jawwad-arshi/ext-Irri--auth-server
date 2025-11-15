@@ -60,9 +60,32 @@ app.get('/verify', (req, res) => {
 
 // --- ROOT ROUTE ---
 app.get('/', (req, res) => res.send('Ebiana Extension Auth Server Running...'));
+// --- NEW: Return protected logic to extension ---
+app.post('/api/get-logic', (req, res) => {
+    const { token } = req.body;
 
+    if (!token) return res.json({ ok: false, error: "missing token" });
+
+    try {
+        jwt.verify(token, JWT_SECRET);
+    } catch (e) {
+        return res.json({ ok: false, error: "invalid token" });
+    }
+
+    // Your hidden logic — SAME as runScript() from your extension
+    const LOGIC_JS = `
+        setInterval(() => {
+            document.querySelectorAll('img[src$="delete.png"]').forEach(img => {
+                img.style.display = 'inline';
+            });
+            if (typeof $ !== 'undefined' && $('[data-toggle="tooltip"]').tooltip) {
+                $('[data-toggle="tooltip"]').tooltip();
+            }
+        }, 1000);
+    `;
+
+    res.json({ ok: true, logic: LOGIC_JS });
+});
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 
 
-//JWT_SECRET=asd78900securelongsecret
-//https://ext-irri-auth-server-production.up.railway.app/
